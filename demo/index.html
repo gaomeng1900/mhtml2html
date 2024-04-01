@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="icon" href="#" />
+		<title>Demo</title>
+
+		<style>
+			/* reset */
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+
+			.wrapper {
+				width: 100vw;
+				height: 100vh;
+				padding: 10px;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				gap: 10px;
+			}
+
+			.file {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				gap: 10px;
+			}
+
+			.content {
+				width: 100%;
+				height: 90%;
+				background-color: #f0f0f0;
+				overflow: scroll;
+				border: 1px solid #ccc;
+			}
+
+			#iframe {
+				width: 100%;
+				height: 100%;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="wrapper">
+			<!-- 让用户上传一个 mht 文件 -->
+			<div class="file">
+				<label for="file">选择 MHT 文件</label>
+				<input type="file" id="file" title="选择一个mhtml" />
+			</div>
+			<!-- 显示转换后的 html 内容 -->
+			<div class="content">
+				<iframe id="iframe" frameborder="0"></iframe>
+			</div>
+		</div>
+		<script type="module">
+			import { convert } from '/src/mht2html.mjs'
+
+			const file = document.getElementById('file')
+			const iframe = document.getElementById('iframe')
+
+			// 上传文件后，读取 string，调用 convert 转换为 Element ，写入 iframe
+			file.addEventListener('change', async () => {
+				const [f] = file.files
+				const string = await f.text()
+
+				const element = convert(string, { convertIframes: true })
+				const html =
+					'<!DOCTYPE html>\n' + element.documentElement.outerHTML
+
+				// console.log(element)
+				// console.log(html)
+
+				const doc = iframe.contentWindow.document
+				doc.open()
+				doc.write(html)
+				doc.close()
+			})
+		</script>
+	</body>
+</html>

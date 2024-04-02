@@ -1,6 +1,6 @@
 {
 	"name": "mht2html",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"private": true,
 	"description": "",
 	"main": "index.js",
@@ -11,5 +11,6 @@
 	"license": "MIT",
 	"devDependencies": {
 		"http-server": "^14.1.1"
-	}
+	},
+	"repository": "https://github.com/gaomeng1900/mhtml2html.git"
 }

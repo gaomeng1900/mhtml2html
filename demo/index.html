@@ -20,15 +20,7 @@
 				padding: 10px;
 				display: flex;
 				flex-direction: column;
-				align-items: center;
-				justify-content: center;
-				gap: 10px;
-			}
-
-			.file {
-				display: flex;
-				flex-direction: column;
-				align-items: center;
+				/* align-items: center; */
 				justify-content: center;
 				gap: 10px;
 			}
@@ -38,7 +30,8 @@
 				height: 90%;
 				background-color: #f0f0f0;
 				overflow: scroll;
-				border: 1px solid #ccc;
+				/* border: 1px solid #ccc; */
+				box-shadow: 0 0 0px 2px rgb(157 153 153);
 			}
 
 			#iframe {
@@ -49,6 +42,14 @@
 	</head>
 	<body>
 		<div class="wrapper">
+			<!-- 选择文件编码 -->
+			<div class="enc">
+				<label for="enc">编码</label>
+				<select id="enc">
+					<option value="utf-8">utf-8</option>
+					<option value="gbk">gbk</option>
+				</select>
+			</div>
 			<!-- 让用户上传一个 mht 文件 -->
 			<div class="file">
 				<label for="file">选择 MHT 文件</label>
@@ -64,23 +65,45 @@
 
 			const file = document.getElementById('file')
 			const iframe = document.getElementById('iframe')
+			const enc = document.getElementById('enc')
 
 			// 上传文件后，读取 string，调用 convert 转换为 Element ，写入 iframe
 			file.addEventListener('change', async () => {
 				const [f] = file.files
 				const string = await f.text()
 
-				const element = convert(string, { convertIframes: true })
-				const html =
+				const encoding = enc.value || 'utf-8'
+
+				console.log('encoding:', encoding)
+
+				const element = convert(string, {
+					convertIframes: true,
+					enc: encoding,
+				})
+
+				// element.documentElement.outerHTML 不会包含 <html> 标签外的内容
+				let html =
 					'<!DOCTYPE html>\n' + element.documentElement.outerHTML
+
+				html = html.replace(/charset=GBK/g, 'charset=utf-8')
 
 				// console.log(element)
 				// console.log(html)
 
+				// 替换 iframe 内容
 				const doc = iframe.contentWindow.document
 				doc.open()
 				doc.write(html)
 				doc.close()
+
+				// 替换 iframe 内容
+				// @note 下面这种方法会导致一些 background-image 无法显示，原因不明
+
+				// const blob = new Blob([html], { type: 'text/html' })
+				// const url = URL.createObjectURL
+				// 	? URL.createObjectURL(blob)
+				// 	: window.webkitURL.createObjectURL(blob)
+				// iframe.contentWindow.location.replace(url)
 			})
 		</script>
 	</body>

@@ -1,28 +1,37 @@
 /**
  * mht2html
  *
- * @Author : Simon
- * @Version : 1.0.0
- * @Date : 2024-04-01
- * @Description : Converts mhtml to html.
- * @Original : Mayank Sindwani https://github.com/msindwan/mhtml2html
- * @Changes :
+ * @Author Simon {@link https://github.com/gaomeng1900/mhtml2html}
+ * @Version 1.0.0
+ * @Date 2024-04-01
+ * @Description Converts mhtml to html.
+ * @Original Mayank Sindwani https://github.com/msindwan/mhtml2html
+ * @Changes
  * - remove node.js support
  * - remove all dependencies
  * - remove bundlers
  * - use native mjs module
+ * - support GBK encoding with native TextDecoder
  *
  * Licensed under the MIT License
  * Copyright(c) 2024 Simon
  * Copyright(c) 2016 Mayank Sindwani
  **/
 
+const gbkDecoder = new TextDecoder('gbk')
+const utf8Decoder = new TextDecoder('utf-8')
+
 /**
- * css 等 文本资源 会被保存为 quoted-printable 编码
+ * Strings like css will be saved as quoted-printable.
+ * This function decodes quoted-printable with support for gbk encoding.
  * @license MIT
- * @link https://github.com/mathiasbynens/quoted-printable/blob/master/src/quoted-printable.js
+ * - edited from `quoted-printable` by Mathias Bynens
+ * @see {@link https://github.com/mathiasbynens/quoted-printable/blob/master/src/quoted-printable.js}
  */
-function decodeQuotedPrintable(input) {
+function decodeQuotedPrintable(input, enc = 'utf-8') {
+	const decoder = enc.toUpperCase() === 'GBK' ? gbkDecoder : utf8Decoder
+	console.log('enc', enc)
+
 	return (
 		input
 			// https://tools.ietf.org/html/rfc2045#section-6.7, rule 3:
@@ -38,9 +47,20 @@ function decodeQuotedPrintable(input) {
 			// combination of two hexidecimal digits. For optimal compatibility,
 			// lowercase hexadecimal digits are supported as well. See
 			// https://tools.ietf.org/html/rfc2045#section-6.7, note 1.
-			.replace(/=([a-fA-F0-9]{2})/g, function ($0, $1) {
-				var codePoint = parseInt($1, 16)
-				return String.fromCharCode(codePoint)
+			/**
+			 * @note The method above only supports utf-8 encoding
+			 * @edit Add support for gbk encoding by using TextDecoder
+			 * @condition input must be full code points
+			 */
+			.replace(/(=[a-fA-F0-9]{2}){1,}/g, function ($0, $1) {
+				const array = $0
+					.split('=')
+					.slice(1)
+					.map((hex) => parseInt(hex, 16))
+				const buffer = new Uint8Array(array)
+				const utf8 = decoder.decode(buffer)
+
+				return utf8
 			})
 	)
 }
@@ -129,11 +149,11 @@ function replaceReferences(media, base, asset) {
 }
 
 // Converts the provided asset to a data URI based on the encoding.
-function convertAssetToDataURI(asset) {
+function convertAssetToDataURI(asset, enc = 'utf-8') {
 	switch (asset.encoding) {
 		case 'quoted-printable':
 			return `data:${asset.type};utf8,${escape(
-				decodeQuotedPrintable(asset.data),
+				decodeQuotedPrintable(asset.data, enc),
 			)}`
 		case 'base64':
 			return `data:${asset.type};base64,${asset.data}`
@@ -150,7 +170,7 @@ function convertAssetToDataURI(asset) {
  * @param {options.htmlOnly} // Only handle and return html. Ignore static resources.
  * @returns an html document without resources if htmlOnly === true; an MHTML parsed object otherwise.
  */
-const parse = (mhtml, { htmlOnly = false } = {}) => {
+const parse = (mhtml, { htmlOnly = false, enc = 'utf-8' } = {}) => {
 	const MHTML_FSM = {
 		MHTML_HEADERS: 0,
 		MTHML_CONTENT: 1,
@@ -185,7 +205,45 @@ const parse = (mhtml, { htmlOnly = false } = {}) => {
 	}
 
 	// Returns the next line from the index.
+	/**
+	 * @edit
+	 * @note merge quoted-printable multi-line content into one line
+	 * - this is required for gbk encoding
+	 */
 	function getLine(encoding) {
+		if (encoding === 'quoted-printable') {
+			let line = mhtml[i]
+
+			while (true) {
+				i++
+				assert(i < mhtml.length - 1, 'Unexpected EOF')
+
+				line += mhtml[i]
+
+				// 如果结尾是 =\n =\r\n 则删除行尾并继续读取下一行
+
+				// In older versions of Mac, line breaks are represented by '\r',
+				// while in Windows, line breaks are represented by '\r\n'.
+				// Since Mac is not commonly used as a server, we can ignore '\r'.
+				if (mhtml[i] === '\r') line = line.slice(0, -1)
+
+				if (line.endsWith('=\n')) {
+					line = line.slice(0, -2)
+					l++
+					continue
+				}
+
+				if (line.endsWith('\n')) {
+					l++
+					break
+				}
+			}
+
+			i++
+
+			return decodeQuotedPrintable(line, enc)
+		}
+
 		const j = i
 
 		// Wait until a newline character is encountered or when we exceed the str length.
@@ -199,9 +257,9 @@ const parse = (mhtml, { htmlOnly = false } = {}) => {
 		const line = mhtml.substring(j, i)
 
 		// Return the (decoded) line.
-		if (encoding === 'quoted-printable') {
-			return decodeQuotedPrintable(line)
-		}
+		// if (encoding === 'quoted-printable') {
+		// 	return decodeQuotedPrintable(line)
+		// }
 		if (encoding === 'base64') {
 			return line.trim()
 		}
@@ -295,10 +353,6 @@ const parse = (mhtml, { htmlOnly = false } = {}) => {
 						typeof encoding !== 'undefined',
 						`Content-Transfer-Encoding not provided;  Line ${l}`,
 					)
-					// assert(
-					// 	typeof encoding !== 'quoted-printable',
-					// 	`Quoted-printable encoding not supported; Line ${l}`,
-					// )
 					assert(
 						typeof type !== 'undefined',
 						`Content-Type not provided; Line ${l}`,
@@ -376,15 +430,19 @@ const parse = (mhtml, { htmlOnly = false } = {}) => {
  * Description: Accepts an mhtml string or parsed object and returns the converted html.
  * @param {mhtml} // The mhtml string or object.
  * @param {options.convertIframes} // Whether or not to include iframes in the converted response (defaults to false).
+ * @param {options.enc} // utf-8 by default. Set to 'gbk' to support GBK encoding.
  * @returns {Element} // The converted html document.
  */
-export const convert = (mhtml, { convertIframes = false } = {}) => {
+export const convert = (
+	mhtml,
+	{ convertIframes = false, enc = 'utf-8' } = {},
+) => {
 	let index, media, frames // Record-keeping.
 	let style, base, img // DOM objects.
 	let href, src // References.
 
 	if (typeof mhtml === 'string') {
-		mhtml = parse(mhtml)
+		mhtml = parse(mhtml, { enc })
 	} else {
 		assert(
 			typeof mhtml === 'object',
@@ -436,6 +494,7 @@ export const convert = (mhtml, { convertIframes = false } = {}) => {
 						// Embed the css into the document.
 						style = documentElem.createElement('style')
 						style.type = 'text/css'
+						style.media = child.media // fix media attribute of link tag
 						media[href].data = replaceReferences(
 							media,
 							href,
@@ -467,7 +526,7 @@ export const convert = (mhtml, { convertIframes = false } = {}) => {
 					) {
 						// Embed the image into the document.
 						try {
-							img = convertAssetToDataURI(media[src])
+							img = convertAssetToDataURI(media[src], enc)
 						} catch (e) {
 							console.warn(e)
 						}

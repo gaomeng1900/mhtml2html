@@ -6,8 +6,7 @@ Ported from [mhtml2html](https://github.com/msindwan/mhtml2html)
 
 -   remove node.js support
 -   remove all dependencies
--   remove bundlers
--   use native mjs module
+-   remove bundlers. use native mjs module
 -   support GBK encoding with native TextDecoder
 
 ## Usage

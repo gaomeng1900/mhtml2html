@@ -2,7 +2,7 @@
  * mht2html
  *
  * @Author Simon {@link https://github.com/gaomeng1900/mhtml2html}
- * @Version 1.0.0
+ * @Version 1.1.2
  * @Date 2024-04-01
  * @Description Converts mhtml to html.
  * @Original Mayank Sindwani https://github.com/msindwan/mhtml2html
@@ -215,7 +215,7 @@ const parse = (mhtml, { htmlOnly = false, enc = 'utf-8' } = {}) => {
 
 			while (true) {
 				i++
-				assert(i < mhtml.length - 1, 'Unexpected EOF')
+				assert(i < mhtml.length, 'Unexpected EOF')
 
 				line += mhtml[i]
 

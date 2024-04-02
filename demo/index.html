@@ -64,8 +64,11 @@
 			const iframe = document.getElementById('iframe')
 			const enc = document.getElementById('enc')
 
-			file.addEventListener('change', async () => {
+			const onChange = async () => {
 				const [f] = file.files
+
+				if (!f) return
+
 				const string = await f.text()
 
 				const encoding = enc.value || 'utf-8'
@@ -100,7 +103,10 @@
 				// 	? URL.createObjectURL(blob)
 				// 	: window.webkitURL.createObjectURL(blob)
 				// iframe.contentWindow.location.replace(url)
-			})
+			}
+
+			file.addEventListener('change', onChange)
+			enc.addEventListener('change', onChange)
 		</script>
 	</body>
 </html>

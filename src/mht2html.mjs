@@ -564,12 +564,17 @@ export const convert = (
 					break
 
 				default:
+					// @note all element has style attribute, except for doctype
 					if (child.style) {
-						child.style.cssText = replaceReferences(
+						const cssText = replaceReferences(
 							media,
 							index,
 							child.style.cssText,
 						)
+
+						if (cssText) {
+							child.style.cssText = cssText
+						}
 					}
 					break
 			}

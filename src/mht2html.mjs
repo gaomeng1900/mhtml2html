@@ -431,7 +431,7 @@ const parse = (mhtml, { htmlOnly = false, enc = 'utf-8' } = {}) => {
  * @param {mhtml} // The mhtml string or object.
  * @param {options.convertIframes} // Whether or not to include iframes in the converted response (defaults to false).
  * @param {options.enc} // utf-8 by default. Set to 'gbk' to support GBK encoding.
- * @returns {Element} // The converted html document.
+ * @returns {Document} // The converted html document.
  */
 export const convert = (
 	mhtml,
@@ -577,5 +577,6 @@ export const convert = (
 			nodes.push(child)
 		})
 	}
+
 	return documentElem
 }

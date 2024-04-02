@@ -4,7 +4,7 @@
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link rel="icon" href="#" />
-		<title>Demo</title>
+		<title>Demo mht2html</title>
 
 		<style>
 			/* reset */
@@ -42,20 +42,17 @@
 	</head>
 	<body>
 		<div class="wrapper">
-			<!-- 选择文件编码 -->
 			<div class="enc">
-				<label for="enc">编码</label>
+				<label for="enc">Encoding</label>
 				<select id="enc">
 					<option value="utf-8">utf-8</option>
 					<option value="gbk">gbk</option>
 				</select>
 			</div>
-			<!-- 让用户上传一个 mht 文件 -->
 			<div class="file">
-				<label for="file">选择 MHT 文件</label>
+				<label for="file">Choose a MHT file</label>
 				<input type="file" id="file" title="选择一个mhtml" />
 			</div>
-			<!-- 显示转换后的 html 内容 -->
 			<div class="content">
 				<iframe id="iframe" frameborder="0"></iframe>
 			</div>
@@ -67,7 +64,6 @@
 			const iframe = document.getElementById('iframe')
 			const enc = document.getElementById('enc')
 
-			// 上传文件后，读取 string，调用 convert 转换为 Element ，写入 iframe
 			file.addEventListener('change', async () => {
 				const [f] = file.files
 				const string = await f.text()
@@ -81,7 +77,7 @@
 					enc: encoding,
 				})
 
-				// element.documentElement.outerHTML 不会包含 <html> 标签外的内容
+				// element.documentElement.outerHTML does not contain doctype
 				let html =
 					'<!DOCTYPE html>\n' + element.documentElement.outerHTML
 
@@ -90,14 +86,14 @@
 				// console.log(element)
 				// console.log(html)
 
-				// 替换 iframe 内容
+				// replace iframe content
 				const doc = iframe.contentWindow.document
 				doc.open()
 				doc.write(html)
 				doc.close()
 
-				// 替换 iframe 内容
-				// @note 下面这种方法会导致一些 background-image 无法显示，原因不明
+				// replace iframe content
+				// @note following method breaks some background images
 
 				// const blob = new Blob([html], { type: 'text/html' })
 				// const url = URL.createObjectURL

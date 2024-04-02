@@ -1,6 +1,6 @@
 # MHT 2 HTML
 
-Convert MHTML string to HTML string in browser.
+Convert MHTML string to HTML string in browser. No dependencies. Support GBK Encoding.
 
 Ported from [mhtml2html](https://github.com/msindwan/mhtml2html)
 

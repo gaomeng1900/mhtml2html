@@ -12,7 +12,7 @@ Ported from [mhtml2html](https://github.com/msindwan/mhtml2html)
 
 ## Usage
 
--   copy `src/mht2html.mjs` to your project
+-   copy `src/mht2html.mjs` to your project, no dependencies needed
 -   import `convert` function
 
 ```javascript

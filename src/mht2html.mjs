@@ -30,7 +30,6 @@ const utf8Decoder = new TextDecoder('utf-8')
  */
 function decodeQuotedPrintable(input, enc = 'utf-8') {
 	const decoder = enc.toUpperCase() === 'GBK' ? gbkDecoder : utf8Decoder
-	console.log('enc', enc)
 
 	return (
 		input
@@ -494,7 +493,7 @@ export const convert = (
 						// Embed the css into the document.
 						style = documentElem.createElement('style')
 						style.type = 'text/css'
-						style.media = child.media // fix media attribute of link tag
+						style.media = child.media // @fix media attribute of link tag
 						media[href].data = replaceReferences(
 							media,
 							href,

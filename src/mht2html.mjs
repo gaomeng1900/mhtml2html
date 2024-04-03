@@ -49,7 +49,8 @@ function decodeQuotedPrintable(input, enc = 'utf-8') {
 			/**
 			 * @note The method above only supports utf-8 encoding
 			 * @edit Add support for gbk encoding by using TextDecoder
-			 * @condition input must be full code points
+			 * @condition input must contains full code points
+			 * @todo may cause performance issue with large input
 			 */
 			.replace(/(=[a-fA-F0-9]{2}){1,}/g, function ($0, $1) {
 				const array = $0
